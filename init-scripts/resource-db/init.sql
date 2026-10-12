@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS resources (
+    id   SERIAL PRIMARY KEY,
+    link VARCHAR(255) NOT NULL
+);
