@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import farid.aghazada.resource_service.Client.SongServiceClient;
 import farid.aghazada.resource_service.Entity.ResourceEntity;
@@ -16,6 +18,7 @@ import farid.aghazada.resource_service.Exception.ContentMismatchException;
 import farid.aghazada.resource_service.Exception.InvalidIdException;
 import farid.aghazada.resource_service.Exception.ResourceNotFoundException;
 import farid.aghazada.resource_service.Repository.ResourceRepository;
+import farid.aghazada.resource_service.RabbitMQ.RabbitMQProducer;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,7 +28,9 @@ public class ResourceService {
     private final ResourceRepository resourceRepository;
     private final SongServiceClient songServiceClient;
     private final S3Service s3Service;
+    private final RabbitMQProducer rabbitMQProducer;
 
+    @Transactional
     public Map<String, Integer> uploadMp3(byte[] audioData, String contentType) {
         if (!"audio/mpeg".equalsIgnoreCase(contentType)) {
             throw new ContentMismatchException("Invalid file format: " + contentType + ". Only MP3 files are allowed");
@@ -34,7 +39,14 @@ public class ResourceService {
          String key = s3Service.uploadFile(audioData, contentType);
 
         try {
-            return Map.of("id", resourceRepository.save(ResourceEntity.builder().link(key).build()).getId());
+            Integer id = resourceRepository.save(ResourceEntity.builder().link(key).build()).getId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    rabbitMQProducer.sendMessage(id.toString());
+                }
+            });
+            return Map.of("id", id);
         } catch (RuntimeException e) {
             s3Service.deleteFile(key);
             throw e;

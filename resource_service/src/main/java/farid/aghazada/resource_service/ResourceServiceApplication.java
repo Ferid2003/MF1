@@ -17,14 +17,16 @@ public class ResourceServiceApplication {
 	}
 
 	@Bean
-	@Primary
-	RestClient.Builder restClientBuilder() {
+	@LoadBalanced
+	RestClient.Builder loadBalancedRestClientBuilder() {
 		return RestClient.builder();
 	}
 
+	// ponytail: @Primary plain builder so Eureka's own transport (getIfAvailable)
+	// doesn't pick up the @LoadBalanced one and try to resolve "eureka-service" via LB.
 	@Bean
-	@LoadBalanced
-	RestClient.Builder loadBalancedRestClientBuilder() {
+	@Primary
+	RestClient.Builder restClientBuilder() {
 		return RestClient.builder();
 	}
 

@@ -64,6 +64,12 @@ services:
       AWS_REGION: ${AWS_REGION}
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
       EUREKA_SERVICE_URL: http://${EUREKA_SERVICE_NAME}:${EUREKA_SERVICE_PORT}/eureka/
     depends_on:
       resource-db:
@@ -71,6 +77,26 @@ services:
       localstack:
         condition: service_healthy
       song-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  resource-processor:
+    build: ./resource_processor
+    ports:
+      - "${RESOURCE_PROCESSOR_PORT}:${RESOURCE_PROCESSOR_PORT}"
+    environment:
+      RESOURCE_PROCESSOR_PORT: ${RESOURCE_PROCESSOR_PORT}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      EUREKA_SERVICE_URL: http://${EUREKA_SERVICE_NAME}:${EUREKA_SERVICE_PORT}/eureka/
+    depends_on:
+      rabbitmq:
         condition: service_started
 
   localstack:
@@ -103,3 +129,14 @@ services:
       GATEWAY_PORT: ${GATEWAY_PORT}
       EUREKA_SERVICE_PORT: ${EUREKA_SERVICE_PORT}
       EUREKA_SERVICE_URL: http://${EUREKA_SERVICE_NAME}:${EUREKA_SERVICE_PORT}/eureka/
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "${RABBITMQ_MANAGEMENT_CONSOLE_PORT}:${RABBITMQ_MANAGEMENT_CONSOLE_PORT}"
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+    environment:
+      RABBITMQ_MANAGEMENT_CONSOLE_PORT: ${RABBITMQ_MANAGEMENT_CONSOLE_PORT}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}

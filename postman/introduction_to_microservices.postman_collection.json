@@ -261,56 +261,39 @@
 					"response": []
 				},
 				{
-					"name": "Create Song Metadata For Uploaded Resource (200)",
+					"name": "Get Auto-Created Song Metadata (200)",
 					"event": [
 						{
-							"listen": "test",
+							"listen": "prerequest",
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"// Upload no longer creates song metadata, so the test creates it for the uploaded resource id",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
-									"});",
-									"",
-									"pm.test(\"Response id equals uploaded resource id\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.id, \"Expected created song id to match uploaded resource id\").to.equal(parseInt(pm.variables.get(\"id\")));",
-									"});"
+									"// Module 2: upload now triggers async metadata creation in the Resource Processor.",
+									"// Poll the Song Service until the processor has saved metadata for the uploaded id.",
+									"const base = pm.variables.get(\"song_service_url\");",
+									"const id = pm.variables.get(\"id\");",
+									"const MAX_ATTEMPTS = 15;",
+									"const DELAY_MS = 1000;",
+									"const sleep = (ms) => new Promise((r) => setTimeout(r, ms));",
+									"const exists = () => new Promise((res) =>",
+									"    pm.sendRequest({ url: `${base}/songs/${id}`, method: \"GET\" },",
+									"        (err, r) => res(!err && r && r.code === 200)));",
+									"for (let i = 0; i < MAX_ATTEMPTS; i++) {",
+									"    if (await exists()) break;",
+									"    await sleep(DELAY_MS);",
+									"}"
 								]
 							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"id\": {{id}},\n    \"name\": \"We are the champions\",\n    \"artist\": \"Queen\",\n    \"album\": \"News of the world\",\n    \"duration\": \"02:59\",\n    \"year\": \"1977\"\n}"
 						},
-						"url": {
-							"raw": "{{song_service_url}}/songs",
-							"host": [
-								"{{song_service_url}}"
-							],
-							"path": [
-								"songs"
-							]
-						}
-					}
-				},
-				{
-					"name": "Get Existing Song Metadata (200)",
-					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
+									"pm.test(\"Auto-created song id equals uploaded resource id\", function () {",
+									"    pm.expect(pm.response.json().id, \"Processor should save metadata under the resource id\")",
+									"        .to.equal(parseInt(pm.variables.get(\"id\")));",
+									"});",
+									"",
 									"pm.test(\"Request URL matches expected structure\", function () {\r",
 									"    var requestUrl = pm.request.url.toString();\r",
 									"    var expectedBaseUrl = pm.variables.get(\"song_service_url\") + \"/songs/\";\r",
@@ -2567,52 +2550,30 @@
 							"response": []
 						},
 						{
-							"name": "! Create Song Metadata For Uploaded Resource",
+							"name": "Create Song Metadata - Already Exists (409)",
 							"event": [
 								{
-									"listen": "test",
+									"listen": "prerequest",
 									"script": {
 										"type": "text/javascript",
 										"exec": [
-											"// Upload no longer creates song metadata, so the test creates it for the uploaded resource id",
-											"pm.test(\"Status code is 200\", function () {",
-											"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
-											"});",
-											"",
-											"pm.test(\"Response id equals uploaded resource id\", function () {",
-											"    var jsonData = pm.response.json();",
-											"    pm.expect(jsonData.id, \"Expected created song id to match uploaded resource id\").to.equal(parseInt(pm.variables.get(\"id\")));",
-											"});"
+											"// Module 2: upload now triggers async metadata creation in the Resource Processor.",
+											"// Poll the Song Service until the processor has saved metadata for the uploaded id.",
+											"const base = pm.variables.get(\"song_service_url\");",
+											"const id = pm.variables.get(\"id\");",
+											"const MAX_ATTEMPTS = 15;",
+											"const DELAY_MS = 1000;",
+											"const sleep = (ms) => new Promise((r) => setTimeout(r, ms));",
+											"const exists = () => new Promise((res) =>",
+											"    pm.sendRequest({ url: `${base}/songs/${id}`, method: \"GET\" },",
+											"        (err, r) => res(!err && r && r.code === 200)));",
+											"for (let i = 0; i < MAX_ATTEMPTS; i++) {",
+											"    if (await exists()) break;",
+											"    await sleep(DELAY_MS);",
+											"}"
 										]
 									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"id\": {{id}},\n    \"name\": \"We are the champions\",\n    \"artist\": \"Queen\",\n    \"album\": \"News of the world\",\n    \"duration\": \"02:59\",\n    \"year\": \"1977\"\n}"
 								},
-								"url": {
-									"raw": "{{song_service_url}}/songs",
-									"host": [
-										"{{song_service_url}}"
-									],
-									"path": [
-										"songs"
-									]
-								}
-							}
-						},
-						{
-							"name": "Create Song Metadata - Already Exists (409)",
-							"event": [
 								{
 									"listen": "test",
 									"script": {
@@ -3535,12 +3496,12 @@
 		},
 		{
 			"key": "resource_service_url",
-			"value": "http://localhost:8080",
+			"value": "http://localhost:8085",
 			"type": "string"
 		},
 		{
 			"key": "song_service_url",
-			"value": "http://localhost:8080",
+			"value": "http://localhost:8085",
 			"type": "string"
 		}
 	]
