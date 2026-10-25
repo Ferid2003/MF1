@@ -1,0 +1,16 @@
+description: processor re-creates existing song metadata (redelivered message)
+name: create_song_conflict
+request:
+  method: POST
+  url: /songs
+  headers:
+    Content-Type: application/json
+  body:
+    id: 2
+    name: Song
+    artist: Artist
+    album: Album
+    duration: "03:45"
+    year: "2020"
+response:
+  status: 409

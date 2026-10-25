@@ -1,0 +1,10 @@
+description: resource-service announces an uploaded resource by its id
+label: resource_uploaded
+input:
+  triggeredBy: sendResourceUploaded()
+outputMessage:
+  sentTo: exchange-name
+  headers:
+    amqp_receivedRoutingKey: routing-key
+    contentType: text/plain
+  body: 1

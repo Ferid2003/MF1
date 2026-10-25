@@ -45,4 +45,4 @@ S3 settings (`S3_ENDPOINT`, `S3_BUCKET`, `AWS_*`) are in `.env`; when running re
 
 ## Resource Processor
 
-`resource_processor` is a web-less Spring Boot app holding the Tika MP3 metadata extraction (`Mp3MetadataExtractor`). It is not part of compose yet; run its tests with `mvn test` in that folder.
+`resource_processor` is a web-less Spring Boot app holding the Tika MP3 metadata extraction (`Mp3MetadataExtractor`). See [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) for the test strategy and how to run each kind of test.
