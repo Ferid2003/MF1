@@ -20,7 +20,8 @@ Why this mix:
 - **Contract tests replace most cross-service testing.** The services share no DTO classes (`SongCreationDTO` in song_service, `SongMetadataRequestDTO` in resource_processor) and the upload message is a bare `String`, so drift is silent until runtime. Contracts pin both seams without starting the other service.
 - **E2E is small on purpose** (one happy path through upload → async processing → delete, one rejection). It is slow, needs the whole compose stack, and is the only place the Eureka routing, gateway and S3 are exercised together.
 
-`gateway` and `eureka_service` contain only configuration, so they have no tests of their own; the e2e run covers them.
+`eureka_service` contains only configuration, so it has no tests of its own; the e2e run covers it.
+`gateway` has `GlobalErrorHandlerTest` (`@SpringBootTest`, Eureka disabled): an undefined route returns a friendly 404, and a service with no instances or an unreachable instance returns a friendly 503. Run with `cd gateway && mvn test`.
 
 ## Contracts and stub propagation
 

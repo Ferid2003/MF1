@@ -37,8 +37,6 @@ services:
     build: ./song_service
     deploy:
       replicas: 2
-    ports:
-      - "${SONG_SERVICE_PORT_RANGE_LOWER_LIMIT}-${SONG_SERVICE_PORT_RANGE_UPPER_LIMIT}:${SONG_SERVICE_PORT}"
     environment:
       SONG_SERVICE_PORT: ${SONG_SERVICE_PORT}
       SONG_DB_URL: ${SONG_DB_URL}
@@ -59,8 +57,6 @@ services:
 
   resource-service:
     build: ./resource_service
-    ports:
-      - "${RESOURCE_SERVICE_PORT}:${RESOURCE_SERVICE_PORT}"
     environment:
       RESOURCE_SERVICE_PORT: ${RESOURCE_SERVICE_PORT}
       RESOURCE_DB_URL: ${RESOURCE_DB_URL}
