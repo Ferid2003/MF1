@@ -3,6 +3,7 @@ package farid.aghazada.resource_service.Service;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import farid.aghazada.resource_service.Exception.StorageException;
 import farid.aghazada.resource_service.Exception.ResourceNotFoundException;
 
 @Service
+@RefreshScope
 @RequiredArgsConstructor
 public class S3Service {
 

@@ -2,11 +2,13 @@ package farid.aghazada.resource_service.RabbitMQ;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class RabbitMQProducer {
 
