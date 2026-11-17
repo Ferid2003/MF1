@@ -2,6 +2,8 @@ package farid.aghazada.resource_service.Entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,4 +29,14 @@ public class ResourceEntity {
 
     @Column(nullable = false)
     private String link;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ResourceState state;
+
+    @Column(nullable = false)
+    private String bucket;
+
+    @Column(nullable = false)
+    private String path;
 }

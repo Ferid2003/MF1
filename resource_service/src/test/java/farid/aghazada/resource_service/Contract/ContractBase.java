@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +31,7 @@ import farid.aghazada.resource_service.RabbitMQ.RabbitMQProducer;
 public abstract class ContractBase {
 
     @Configuration
-    @Import(RabbitMQProducer.class)
+    @Import({ RabbitMQProducer.class, RefreshAutoConfiguration.class }) // producer is @RefreshScope
     static class Cfg {
         @Bean("exchange-name")
         QueueChannel exchangeChannel() {

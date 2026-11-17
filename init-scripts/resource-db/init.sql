@@ -1,4 +1,7 @@
 CREATE TABLE IF NOT EXISTS resources (
-    id   SERIAL PRIMARY KEY,
-    link VARCHAR(255) NOT NULL
+    id     SERIAL PRIMARY KEY,
+    link   VARCHAR(255) NOT NULL,
+    state  VARCHAR(20)  NOT NULL,
+    bucket VARCHAR(255) NOT NULL,
+    path   VARCHAR(255) NOT NULL
 );

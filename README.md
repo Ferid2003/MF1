@@ -40,8 +40,8 @@ Data is not persisted, so the databases are recreated (and the init scripts re-r
 ## S3 storage (LocalStack)
 
 MP3 files live in an S3 bucket emulated by LocalStack (`localstack` service, port 4566); the `resources` table only stores the object key (`link`).
-The bucket (`S3_BUCKET`) is created on LocalStack start by `init-scripts/localstack/create-bucket.sh`.
-S3 settings (`S3_ENDPOINT`, `S3_BUCKET`, `AWS_*`) are in `.env`; when running resource-service from the IDE use `S3_ENDPOINT=http://localhost:4566`.
+Buckets (`staging-bucket`, `permanent-bucket`) are created on startup by storage-service.
+S3 settings (`S3_ENDPOINT`, `AWS_*`) are in `.env`; when running resource-service from the IDE use `S3_ENDPOINT=http://localhost:4566`.
 
 ## Resource Processor
 
