@@ -11,7 +11,15 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "eureka.client.enabled=false",
-                "spring.cloud.discovery.client.simple.instances.resource-service[0].uri=http://127.0.0.1:1"
+                "spring.cloud.discovery.client.simple.instances.resource-service[0].uri=http://127.0.0.1:1",
+                // routes live in the config server (gateway.properties), which tests don't reach
+                "spring.cloud.gateway.server.webflux.routes[0].id=song-service",
+                "spring.cloud.gateway.server.webflux.routes[0].uri=lb://song-service",
+                "spring.cloud.gateway.server.webflux.routes[0].predicates[0]=Path=/songs/**",
+                "spring.cloud.gateway.server.webflux.routes[1].id=resource-service",
+                "spring.cloud.gateway.server.webflux.routes[1].uri=lb://resource-service",
+                "spring.cloud.gateway.server.webflux.routes[1].predicates[0]=Path=/resources/**",
+                "spring.cloud.gateway.server.webflux.httpclient.connect-timeout=2000"
         })
 class GlobalErrorHandlerTest {
 

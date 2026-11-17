@@ -33,6 +33,49 @@ services:
       interval: 3s
       retries: 10
 
+  storage-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${STORAGE_DB_NAME}
+      POSTGRES_USER: ${STORAGE_DB_USER}
+      POSTGRES_PASSWORD: ${STORAGE_DB_PASSWORD}
+    ports:
+      - "${STORAGE_DB_EXPOSE_PORT}:${STORAGE_DB_INTERNAL_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${STORAGE_DB_USER} -d ${STORAGE_DB_NAME}"]
+      interval: 3s
+      retries: 10
+
+  storage-service:
+    build: ./storage_service
+    ports:
+      - "${STORAGE_SERVICE_PORT}:${STORAGE_SERVICE_PORT}"
+    environment:
+      STORAGE_SERVICE_PORT: ${STORAGE_SERVICE_PORT}
+      STORAGE_DB_URL: ${STORAGE_DB_URL}
+      STORAGE_DB_USER: ${STORAGE_DB_USER}
+      STORAGE_DB_PASSWORD: ${STORAGE_DB_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      EUREKA_SERVICE_URL: http://${EUREKA_SERVICE_NAME}:${EUREKA_SERVICE_PORT}/eureka/
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${STORAGE_SERVICE_PORT}/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      storage-db:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+
   song-service:
     build: ./song_service
     deploy:
@@ -54,6 +97,8 @@ services:
         condition: service_healthy
       eureka-service:
         condition: service_healthy
+      config-service:
+        condition: service_healthy
 
   resource-service:
     build: ./resource_service
@@ -67,7 +112,6 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
       S3_ENDPOINT: ${S3_ENDPOINT}
-      S3_BUCKET: ${S3_BUCKET}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
@@ -91,6 +135,10 @@ services:
       eureka-service:
         condition: service_healthy
       song-service:
+        condition: service_healthy
+      storage-service:
+        condition: service_started
+      config-service:
         condition: service_healthy
 
   resource-processor:
@@ -117,6 +165,8 @@ services:
         condition: service_healthy
       eureka-service:
         condition: service_healthy
+      config-service:
+        condition: service_healthy
 
   localstack:
     image: localstack/localstack:3
@@ -124,17 +174,17 @@ services:
       - "4566:4566"
     environment:
       SERVICES: s3
-      S3_BUCKET: ${S3_BUCKET}
-    volumes:
-      - ./init-scripts/localstack:/etc/localstack/init/ready.d:ro
     healthcheck:
-      # healthy only once the init script has created the bucket
-      test: ["CMD-SHELL", "awslocal s3api head-bucket --bucket ${S3_BUCKET}"]
+      # buckets are created by storage-service on startup
+      test: ["CMD-SHELL", "awslocal s3api list-buckets"]
       interval: 3s
       retries: 20
 
   eureka-service:
     build: ./eureka_service
+    depends_on:
+      config-service:
+        condition: service_healthy
     ports:
       - "${EUREKA_SERVICE_PORT}:${EUREKA_SERVICE_PORT}"
     environment:
@@ -169,6 +219,8 @@ services:
         condition: service_healthy
       resource-service:
         condition: service_healthy
+      config-service:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -186,3 +238,21 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
+
+
+  config-service:
+    build: ./config-service
+    restart: on-failure:5 # github clone at startup is flaky from the container network
+    extra_hosts:
+      - "github.com:140.82.121.4"
+    ports:
+      - "${CONFIG_SERVICE_PORT}:${CONFIG_SERVICE_PORT}"
+    environment:
+      CONFIG_SERVICE_PORT: ${CONFIG_SERVICE_PORT}
+      EUREKA_SERVICE_URL: http://${EUREKA_SERVICE_NAME}:${EUREKA_SERVICE_PORT}/eureka/
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${CONFIG_SERVICE_PORT}/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s

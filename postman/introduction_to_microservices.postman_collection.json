@@ -729,6 +729,227 @@
 			]
 		},
 		{
+			"name": "Storage Service Happy Path",
+			"item": [
+				{
+					"name": "Create Storage (200)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.variables.set(\"storage_bucket\", \"postman-bucket-\" + Date.now());"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response is in JSON format\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\"), \"Expected Content-Type to be 'application/json'\")",
+									"        .to.include(\"application/json\");",
+									"});",
+									"",
+									"pm.test(\"Response contains only numeric 'id' field\", function () {",
+									"    var body = pm.response.json();",
+									"    pm.expect(Object.keys(body)).to.deep.equal([\"id\"]);",
+									"    pm.expect(body.id).to.be.a(\"number\");",
+									"    pm.collectionVariables.set(\"storage_id\", body.id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"storageType\": \"PERMANENT\",\n    \"bucket\": \"{{storage_bucket}}\",\n    \"path\": \"/files\"\n}"
+						},
+						"url": {
+							"raw": "{{storage_service_url}}/storages",
+							"host": [
+								"{{storage_service_url}}"
+							],
+							"path": [
+								"storages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Storages (200)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response is in JSON format\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\"), \"Expected Content-Type to be 'application/json'\")",
+									"        .to.include(\"application/json\");",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an(\"array\");",
+									"});",
+									"",
+									"pm.test(\"Every storage has id, storageType, bucket and path\", function () {",
+									"    pm.response.json().forEach(function (s) {",
+									"        pm.expect(Object.keys(s).sort()).to.deep.equal([\"bucket\", \"id\", \"path\", \"storageType\"]);",
+									"        pm.expect(s.id).to.be.a(\"number\");",
+									"        pm.expect([\"STAGING\", \"PERMANENT\"]).to.include(s.storageType);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Default STAGING and PERMANENT storages exist\", function () {",
+									"    var types = pm.response.json().map(function (s) { return s.storageType; });",
+									"    pm.expect(types).to.include(\"STAGING\");",
+									"    pm.expect(types).to.include(\"PERMANENT\");",
+									"});",
+									"",
+									"pm.test(\"Created storage is listed\", function () {",
+									"    var created = pm.response.json().find(function (s) { return s.id === pm.collectionVariables.get(\"storage_id\"); });",
+									"    pm.expect(created, \"Storage created in the previous request should be listed\").to.exist;",
+									"    pm.expect(created.bucket).to.equal(pm.variables.get(\"storage_bucket\"));",
+									"    pm.expect(created.path).to.equal(\"/files\");",
+									"    pm.expect(created.storageType).to.equal(\"PERMANENT\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{storage_service_url}}/storages",
+							"host": [
+								"{{storage_service_url}}"
+							],
+							"path": [
+								"storages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Storages (200)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response is in JSON format\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\"), \"Expected Content-Type to be 'application/json'\")",
+									"        .to.include(\"application/json\");",
+									"});",
+									"",
+									"pm.test(\"Only the existing id is reported as deleted\", function () {",
+									"    pm.expect(pm.response.json()).to.deep.equal({ ids: [pm.collectionVariables.get(\"storage_id\")] });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{storage_service_url}}/storages?id={{storage_id}},99999",
+							"host": [
+								"{{storage_service_url}}"
+							],
+							"path": [
+								"storages"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "{{storage_id}},99999"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Storages - Deleted Storage Gone (200)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.expect(pm.response.code, \"Expected status code to be 200\").to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Response is in JSON format\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\"), \"Expected Content-Type to be 'application/json'\")",
+									"        .to.include(\"application/json\");",
+									"});",
+									"",
+									"pm.test(\"Deleted storage is no longer listed\", function () {",
+									"    var ids = pm.response.json().map(function (s) { return s.id; });",
+									"    pm.expect(ids).to.not.include(pm.collectionVariables.get(\"storage_id\"));",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{storage_service_url}}/storages",
+							"host": [
+								"{{storage_service_url}}"
+							],
+							"path": [
+								"storages"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Error Cases",
 			"item": [
 				{
@@ -3502,6 +3723,11 @@
 		{
 			"key": "song_service_url",
 			"value": "http://localhost:8085",
+			"type": "string"
+		},
+		{
+			"key": "storage_service_url",
+			"value": "http://localhost:8084",
 			"type": "string"
 		}
 	]

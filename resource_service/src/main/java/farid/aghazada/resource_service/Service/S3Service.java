@@ -1,14 +1,12 @@
 package farid.aghazada.resource_service.Service;
 
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -22,15 +20,9 @@ public class S3Service {
 
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket}")
-    private String bucketName;
-
-    public String uploadFile(byte[] audioData, String contentType) {
-
-        String key = UUID.randomUUID() + ".mp3";
-
+    public void uploadFile(String bucket, String key, byte[] audioData, String contentType) {
         PutObjectRequest request = PutObjectRequest.builder()
-            .bucket(bucketName)
+            .bucket(bucket)
             .key(key)
             .contentType(contentType)
             .contentLength((long) audioData.length)
@@ -41,13 +33,11 @@ public class S3Service {
         } catch (SdkException e) {
             throw new StorageException("Failed to store file", e);
         }
-
-        return key;
     }
 
-    public byte[] getFile(String key) {
+    public byte[] getFile(String bucket, String key) {
         GetObjectRequest request = GetObjectRequest.builder()
-            .bucket(bucketName)
+            .bucket(bucket)
             .key(key)
             .build();
 
@@ -60,9 +50,9 @@ public class S3Service {
         }
     }
 
-    public void deleteFile(String key) {
+    public void deleteFile(String bucket, String key) {
         DeleteObjectRequest request = DeleteObjectRequest.builder()
-            .bucket(bucketName)
+            .bucket(bucket)
             .key(key)
             .build();
 
@@ -70,6 +60,17 @@ public class S3Service {
             s3Client.deleteObject(request);
         } catch (SdkException e) {
             throw new StorageException("Failed to delete file", e);
+        }
+    }
+
+    public void copyFile(String srcBucket, String srcKey, String dstBucket, String dstKey) {
+        try {
+            s3Client.copyObject(CopyObjectRequest.builder()
+                .sourceBucket(srcBucket).sourceKey(srcKey)
+                .destinationBucket(dstBucket).destinationKey(dstKey)
+                .build());
+        } catch (SdkException e) {
+            throw new StorageException("Failed to copy file", e);
         }
     }
 
