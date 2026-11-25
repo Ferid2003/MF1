@@ -6,7 +6,9 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RefreshScope
 @RequiredArgsConstructor
@@ -22,5 +24,6 @@ public class RabbitMQProducer {
 
     public void sendMessage(String message) {
         rabbitTemplate.convertAndSend(exchange, routingKey, message);
+        log.info("Published resource {} for processing to exchange {}", message, exchange);
     }
 }

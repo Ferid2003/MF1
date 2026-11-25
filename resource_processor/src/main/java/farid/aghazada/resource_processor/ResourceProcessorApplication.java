@@ -1,5 +1,7 @@
 package farid.aghazada.resource_processor;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -18,10 +20,12 @@ public class ResourceProcessorApplication {
 		SpringApplication.run(ResourceProcessorApplication.class, args);
 	}
 
+	// Built by hand, so Boot doesn't instrument it: pass the registry so service-to-service calls
+	// are observed and carry the trace header (traceparent) to the next service.
 	@Bean
 	@LoadBalanced
-	RestClient.Builder loadBalancedRestClientBuilder() {
-		return RestClient.builder();
+	RestClient.Builder loadBalancedRestClientBuilder(ObservationRegistry observationRegistry) {
+		return RestClient.builder().observationRegistry(observationRegistry);
 	}
 
 	// ponytail: @Primary plain builder so Eureka's registry-fetch transport doesn't

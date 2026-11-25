@@ -19,7 +19,9 @@ import farid.aghazada.resource_processor.DTO.SongMetadataRequestDTO;
 import farid.aghazada.resource_processor.Exception.InvalidMp3FileException;
 import farid.aghazada.resource_processor.RabbitMQ.ProcessedProducer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class Mp3MetadataExtractor {
@@ -59,7 +61,10 @@ public class Mp3MetadataExtractor {
         Integer resourceId = Integer.valueOf(id);
         byte[] song = resourceServiceClient.getSong(resourceId);
         SongMetadataRequestDTO songMetadataRequestDTO = extractTags(song, resourceId);
+        log.info("Extracted metadata for resource {}: '{}' by '{}'", resourceId,
+                songMetadataRequestDTO.name(), songMetadataRequestDTO.artist());
         songServiceClient.saveSongMetadata(songMetadataRequestDTO);
+        log.info("Song metadata for resource {} sent to song-service", resourceId);
         processedProducer.sendProcessed(id);
     }
 }

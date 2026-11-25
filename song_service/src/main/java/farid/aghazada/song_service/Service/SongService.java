@@ -19,7 +19,9 @@ import farid.aghazada.song_service.Exception.SongMetadataAlreadyExistsException;
 import farid.aghazada.song_service.Exception.SongMetadataNotFoundException;
 import farid.aghazada.song_service.Repository.SongRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SongService {
@@ -40,6 +42,7 @@ public class SongService {
                 .year(songMetadata.year())
                 .build()
         );
+        log.info("Saved song metadata for resource {}", songMetadataEntity.getId());
         Map<String, Integer> response = new HashMap<>();
         response.put("id", songMetadataEntity.getId());
         return response; 

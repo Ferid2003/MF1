@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 
 import farid.aghazada.resource_service.Service.ResourceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProcessedConsumer {
@@ -22,6 +24,7 @@ public class ProcessedConsumer {
 
     @RabbitListener(queues = "${rabbitmq.processed.queue:processed-queue}")
     public void receiveProcessed(String id) {
+        log.info("Received processed event for resource {}", id);
         resourceService.moveToPermanent(Integer.valueOf(id));
     }
 
