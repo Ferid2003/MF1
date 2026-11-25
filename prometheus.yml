@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: 'storage-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['storage-service:${STORAGE_SERVICE_PORT}']
+  - job_name: 'eureka-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eureka-service:${EUREKA_SERVICE_PORT}']
+  - job_name: 'gateway'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway:${GATEWAY_PORT}']
+  - job_name: 'resource-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['resource-service:${RESOURCE_SERVICE_PORT}']
+  - job_name: 'song-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['song-service:${SONG_SERVICE_PORT}']
