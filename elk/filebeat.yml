@@ -1,0 +1,22 @@
+# Collector: tails every container's stdout (Docker json-file logs) and ships it to Logstash.
+filebeat.inputs:
+  - type: container
+    paths:
+      - /var/lib/docker/containers/*/*.log
+
+processors:
+  - add_docker_metadata: ~          # adds container.name, compose service label, image
+  - drop_event:                     # only this compose project (the folder name, MF1 -> "mf1"), not every container on the host
+      when:
+        not:
+          equals: { container.labels.com_docker_compose_project: mf1 }
+  - drop_event:                     # skip the ELK stack's own chatter
+      when:
+        or:
+          - equals: { container.name: elasticsearch }
+          - equals: { container.name: logstash }
+          - equals: { container.name: kibana }
+          - equals: { container.name: filebeat }
+
+output.logstash:
+  hosts: ["logstash:5044"]

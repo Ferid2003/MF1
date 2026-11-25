@@ -43,9 +43,11 @@ public class ResourceService {
             throw new ContentMismatchException("Invalid file format: " + contentType + ". Only MP3 files are allowed");
         }
 
+        log.info("Upload received: {} bytes", audioData.length);
         StorageDTO staging = storageClient.getStorage(ResourceState.STAGING);
         String key = buildKey(staging.path(), UUID.randomUUID() + ".mp3");
         s3Service.uploadFile(staging.bucket(), key, audioData, contentType);
+        log.info("Stored file in S3 at {}/{}", staging.bucket(), key);
 
         try {
             Integer id = resourceRepository.save(ResourceEntity.builder()
@@ -54,6 +56,7 @@ public class ResourceService {
                     .bucket(staging.bucket())
                     .path(staging.path())
                     .build()).getId();
+            log.info("Resource {} saved in STAGING state", id);
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
@@ -99,6 +102,7 @@ public class ResourceService {
         resource.setPath(permanent.path());
         resource.setLink(newKey);
         resourceRepository.save(resource);
+        log.info("Resource {} moved to PERMANENT storage {}/{}", id, permanent.bucket(), newKey);
     }
 
     private String buildKey(String path, String fileName) {
@@ -110,6 +114,7 @@ public class ResourceService {
         if (id <= 0) {
             throw new InvalidIdException("Invalid value '" + id + "' for ID. Must be a positive integer");
         }
+        log.info("Serving file of resource {}", id);
         ResourceEntity resourceEntity = resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found"));
         return s3Service.getFile(resourceEntity.getBucket(), resourceEntity.getLink());
     }

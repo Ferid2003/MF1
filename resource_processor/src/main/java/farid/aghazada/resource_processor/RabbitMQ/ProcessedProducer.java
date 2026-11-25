@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProcessedProducer {
@@ -24,6 +26,7 @@ public class ProcessedProducer {
 
     public void sendProcessed(String resourceId) {
         rabbitTemplate.convertAndSend(exchange, routingKey, resourceId);
+        log.info("Published processed event for resource {}", resourceId);
     }
 
     @Configuration

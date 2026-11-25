@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: module7
+    folder: Microservices
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

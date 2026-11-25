@@ -13,9 +13,11 @@ import farid.aghazada.storage_service.DTO.StorageRequestDTO;
 import farid.aghazada.storage_service.Entity.StorageEntity;
 import farid.aghazada.storage_service.Repository.StorageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StorageService {
 
     private final StorageRepository storageRepository;
@@ -26,6 +28,7 @@ public class StorageService {
     }
 
     public ResponseEntity<List<StorageEntity>> getAllStorage() {
+        log.info("Listing storages");
         return ResponseEntity.ok(storageRepository.findAll());
     }
 
