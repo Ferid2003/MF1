@@ -1,3 +1,7 @@
+# Fixed project name: Filebeat (elk/filebeat.yml) only ships logs from compose project "mf1",
+# so it must not depend on the folder the repo is cloned into.
+name: mf1
+
 services:
   resource-db:
     image: postgres:17-alpine
